@@ -1,0 +1,203 @@
+{
+  "metadata": {
+    "description": "Knowledge base rules for the DSS. These rules act as hard filters applied BEFORE AHP/TOPSIS evaluation. Drones that fail any hard constraint are eliminated from consideration.",
+    "rule_types": {
+      "hard_constraint": "Drone is eliminated if it fails this rule — non-negotiable",
+      "soft_constraint": "Drone is penalized in scoring but not eliminated",
+      "regulatory_rule": "Derived from EU drone regulations (EU 2019/947, EU 2019/945)"
+    }
+  },
+  "regulatory_rules": [
+    {
+      "id": "REG-01",
+      "name": "EU Open Category A1 Limit",
+      "type": "hard_constraint",
+      "description": "Drones in Open-A1 must weigh under 250g. Not suitable for payload or sensor missions.",
+      "condition": "if regulatory_compliance == 'Open-A1' then max_payload_capacity_kg == 0 AND max_takeoff_weight_kg < 0.25",
+      "action": "eliminate_if_payload_required"
+    },
+    {
+      "id": "REG-02",
+      "name": "EU Open Category A2 Minimum Distance",
+      "type": "hard_constraint",
+      "description": "Open-A2 drones must maintain 30m horizontal distance from uninvolved persons. Not suitable for crowded port areas.",
+      "condition": "if regulatory_compliance == 'Open-A2' AND port_crowd_density == 'high'",
+      "action": "eliminate"
+    },
+    {
+      "id": "REG-03",
+      "name": "Specific Category Authorisation Required",
+      "type": "hard_constraint",
+      "description": "Drones in Specific category require operational authorisation from national aviation authority before deployment.",
+      "condition": "if regulatory_compliance == 'Specific'",
+      "action": "flag_for_authorisation_check",
+      "flag_message": "Drone requires EASA Specific category operational authorisation — confirm before procurement."
+    },
+    {
+      "id": "REG-04",
+      "name": "Night Operations Requirement",
+      "type": "hard_constraint",
+      "description": "Night operations require anti-collision lighting and night vision capability per EU regulations.",
+      "condition": "if scenario.operating_hours == '24_7' AND drone.night_vision == 'none'",
+      "action": "eliminate"
+    },
+    {
+      "id": "REG-05",
+      "name": "Beyond Visual Line of Sight (BVLOS)",
+      "type": "hard_constraint",
+      "description": "Flights beyond visual line of sight require Specific or Certified category compliance.",
+      "condition": "if flight_range_km > 1.5 AND regulatory_compliance IN ['Open-A1', 'Open-A2', 'Open-A3']",
+      "action": "restrict_range_to_vlos",
+      "flag_message": "Drone range capability restricted to VLOS limits under Open category. BVLOS requires Specific authorisation."
+    }
+  ],
+  "operational_rules": [
+    {
+      "id": "OPS-01",
+      "name": "Minimum Flight Time",
+      "type": "hard_constraint",
+      "description": "Drone must meet minimum flight time for the selected port scenario.",
+      "condition": "drone.flight_time_min < scenario.hard_constraints.min_flight_time_min",
+      "action": "eliminate"
+    },
+    {
+      "id": "OPS-02",
+      "name": "Minimum Flight Range",
+      "type": "hard_constraint",
+      "description": "Drone must cover the minimum operational range required by the scenario.",
+      "condition": "drone.flight_range_km < scenario.hard_constraints.min_flight_range_km",
+      "action": "eliminate"
+    },
+    {
+      "id": "OPS-03",
+      "name": "Weather Resistance for Coastal Environment",
+      "type": "hard_constraint",
+      "description": "All drones operating in coastal/salt spray environments must have minimum IP43 rating. IP55 required for fully exposed open-sea ports.",
+      "condition": "drone.weather_resistance_ip < scenario.hard_constraints.min_weather_resistance_ip",
+      "action": "eliminate",
+      "ip_rank_order": ["IP43", "IP53", "IP55", "IP67"]
+    },
+    {
+      "id": "OPS-04",
+      "name": "Real-Time Transmission for Security Missions",
+      "type": "hard_constraint",
+      "description": "Security and emergency scenarios require real-time data transmission to port control.",
+      "condition": "scenario.hard_constraints.real_time_transmission_required == true AND drone.real_time_transmission == false",
+      "action": "eliminate"
+    },
+    {
+      "id": "OPS-05",
+      "name": "Night Vision for 24/7 Operations",
+      "type": "hard_constraint",
+      "description": "24/7 operational scenarios require at least basic night vision capability.",
+      "condition": "scenario.hard_constraints.night_vision_required == true AND drone.night_vision == 'none'",
+      "action": "eliminate"
+    },
+    {
+      "id": "OPS-06",
+      "name": "Budget — Initial Cost",
+      "type": "hard_constraint",
+      "description": "Drone initial cost must not exceed scenario budget ceiling.",
+      "condition": "drone.initial_cost_eur > scenario.budget.max_initial_cost_eur",
+      "action": "eliminate"
+    },
+    {
+      "id": "OPS-07",
+      "name": "Budget — Operational Cost",
+      "type": "hard_constraint",
+      "description": "Drone operational cost per hour must not exceed scenario ceiling.",
+      "condition": "drone.operational_cost_eur_hr > scenario.budget.max_operational_cost_eur_hr",
+      "action": "eliminate"
+    },
+    {
+      "id": "OPS-08",
+      "name": "Minimum Camera Quality for Inspection",
+      "type": "hard_constraint",
+      "description": "Infrastructure inspection missions require minimum camera resolution.",
+      "condition": "if scenario.hard_constraints.min_camera_quality_mp EXISTS AND drone.camera_quality_mp < scenario.hard_constraints.min_camera_quality_mp",
+      "action": "eliminate"
+    },
+    {
+      "id": "OPS-09",
+      "name": "Minimum Payload for Sensor Missions",
+      "type": "hard_constraint",
+      "description": "Sensor-attachment missions require minimum payload capacity.",
+      "condition": "if scenario.hard_constraints.min_payload_capacity_kg EXISTS AND drone.payload_capacity_kg < scenario.hard_constraints.min_payload_capacity_kg",
+      "action": "eliminate"
+    },
+    {
+      "id": "OPS-10",
+      "name": "Minimum Sensor Compatibility for Environmental Missions",
+      "type": "hard_constraint",
+      "description": "Environmental monitoring missions require sufficient third-party sensor support.",
+      "condition": "if scenario.hard_constraints.min_sensor_compatibility EXISTS AND drone.sensor_compatibility < scenario.hard_constraints.min_sensor_compatibility",
+      "action": "eliminate"
+    }
+  ],
+  "soft_rules": [
+    {
+      "id": "SOFT-01",
+      "name": "Obstacle Avoidance in Congested Areas",
+      "type": "soft_constraint",
+      "description": "Drones without obstacle avoidance are penalized in congested port environments.",
+      "condition": "drone.obstacle_avoidance == 'none' AND environment.congestion == 'high'",
+      "action": "apply_penalty",
+      "penalty_weight_reduction": 0.1
+    },
+    {
+      "id": "SOFT-02",
+      "name": "Non-Swappable Battery for Continuous Ops",
+      "type": "soft_constraint",
+      "description": "Drones without swappable batteries are less suitable for continuous/24-7 operations.",
+      "condition": "drone.battery_swappable == false AND scenario.mission.flight_frequency == 'continuous'",
+      "action": "apply_penalty",
+      "penalty_weight_reduction": 0.05
+    },
+    {
+      "id": "SOFT-03",
+      "name": "High Training Requirement",
+      "type": "soft_constraint",
+      "description": "Drones requiring more than 7 days of training are flagged as operationally burdensome for small ports.",
+      "condition": "drone.user_training_days > 7",
+      "action": "flag_and_penalize",
+      "flag_message": "High training requirement — consider staff availability and training budget.",
+      "penalty_weight_reduction": 0.05
+    },
+    {
+      "id": "SOFT-04",
+      "name": "High Maintenance Score",
+      "type": "soft_constraint",
+      "description": "Drones with maintenance score >= 4 are flagged for small ports with limited technical staff.",
+      "condition": "drone.maintenance_score >= 4",
+      "action": "flag_and_penalize",
+      "flag_message": "High maintenance complexity — ensure qualified technical staff are available.",
+      "penalty_weight_reduction": 0.05
+    }
+  ],
+  "expert_recommendations": [
+    {
+      "id": "EXP-01",
+      "name": "Tethered Drone for Stationary Surveillance",
+      "description": "Tethered drones (e.g. Hovermast) offer unlimited flight time but near-zero range. Recommended only for fixed-point monitoring, not area coverage.",
+      "applies_to_types": ["Tethered Multirotor"],
+      "recommended_scenarios": ["S01", "S02"],
+      "note": "Tethered drones should be scored separately or used as a complement to free-flying drones."
+    },
+    {
+      "id": "EXP-02",
+      "name": "Fixed-Wing for Large Area Coverage",
+      "description": "Fixed-wing UAVs offer superior range and endurance but require more space for operation and lack hovering capability. Best for wide-area environmental and surveillance missions.",
+      "applies_to_types": ["Fixed-Wing", "Fixed-Wing VTOL"],
+      "recommended_scenarios": ["S04"],
+      "note": "Fixed-wing drones are unsuitable for close-inspection or confined port areas."
+    },
+    {
+      "id": "EXP-03",
+      "name": "Automated Dock for 24/7 Operations",
+      "description": "Drones with automated launch/recovery pads (e.g. Percepto Sparrow, Zipline) enable fully autonomous continuous operations without human intervention.",
+      "applies_to_launch_methods": ["automated-pad"],
+      "recommended_scenarios": ["S02", "S05"],
+      "note": "Automated dock systems add infrastructure cost not reflected in drone unit price."
+    }
+  ]
+}

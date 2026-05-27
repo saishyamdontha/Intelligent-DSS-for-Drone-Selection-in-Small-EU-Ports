@@ -1,0 +1,62 @@
+{
+  "metadata": {
+    "description": "AHP Pairwise Comparison Matrix for 20 drone selection criteria using Saaty scale (1-9). Values represent how much more important row criterion is vs column criterion. Values <1 mean column is more important.",
+    "saaty_scale": {
+      "1": "Equal importance",
+      "2": "Weak",
+      "3": "Moderate importance",
+      "4": "Moderate plus",
+      "5": "Strong importance",
+      "6": "Strong plus",
+      "7": "Very strong importance",
+      "8": "Very strong plus",
+      "9": "Extreme importance"
+    },
+    "scenario": "General port surveillance and infrastructure inspection",
+    "note": "CR (Consistency Ratio) must be verified < 0.10 during AHP computation"
+  },
+  "criteria": [
+    "flight_time",
+    "flight_range",
+    "night_vision",
+    "payload_capacity",
+    "camera_quality",
+    "autonomy_level",
+    "weather_resistance",
+    "real_time_transmission",
+    "obstacle_avoidance",
+    "gps_accuracy",
+    "battery_swappable",
+    "maintenance_requirements",
+    "initial_cost",
+    "operational_cost",
+    "regulatory_compliance",
+    "integration_capability",
+    "sensor_compatibility",
+    "data_storage",
+    "launch_recovery_method",
+    "redundancy_failsafe"
+  ],
+  "matrix": {
+    "flight_time":              [1,   2,   3,   2,   2,   2,   3,   2,   2,   3,   3,   3,   2,   2,   3,   3,   3,   4,   4,   2],
+    "flight_range":             [0.5, 1,   2,   2,   2,   2,   2,   2,   2,   2,   3,   3,   2,   2,   3,   3,   3,   3,   4,   2],
+    "night_vision":             [0.33,0.5, 1,   0.5, 0.5, 1,   1,   1,   1,   2,   2,   3,   2,   2,   2,   2,   2,   2,   3,   1],
+    "payload_capacity":         [0.5, 0.5, 2,   1,   1,   1,   2,   1,   1,   2,   2,   2,   2,   2,   2,   2,   2,   2,   3,   1],
+    "camera_quality":           [0.5, 0.5, 2,   1,   1,   1,   2,   2,   1,   2,   2,   3,   2,   2,   2,   2,   2,   2,   3,   1],
+    "autonomy_level":           [0.5, 0.5, 1,   1,   1,   1,   2,   1,   1,   2,   2,   2,   2,   2,   3,   2,   2,   2,   3,   1],
+    "weather_resistance":       [0.33,0.5, 1,   0.5, 0.5, 0.5, 1,   1,   1,   1,   2,   2,   2,   2,   3,   2,   2,   2,   3,   1],
+    "real_time_transmission":   [0.5, 0.5, 1,   1,   0.5, 1,   1,   1,   1,   2,   2,   2,   2,   2,   2,   2,   2,   2,   3,   1],
+    "obstacle_avoidance":       [0.5, 0.5, 1,   1,   1,   1,   1,   1,   1,   2,   2,   2,   2,   2,   2,   2,   2,   2,   3,   1],
+    "gps_accuracy":             [0.33,0.5, 0.5, 0.5, 0.5, 0.5, 1,   0.5, 0.5, 1,   2,   2,   2,   2,   2,   2,   2,   2,   3,   1],
+    "battery_swappable":        [0.33,0.33,0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1,   1,   1,   1,   2,   1,   1,   2,   2,   0.5],
+    "maintenance_requirements": [0.33,0.33,0.33,0.5, 0.33,0.5, 0.5, 0.5, 0.5, 0.5, 1,   1,   1,   1,   2,   1,   1,   2,   2,   0.5],
+    "initial_cost":             [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1,   1,   1,   1,   2,   1,   1,   2,   2,   0.5],
+    "operational_cost":         [0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1,   1,   1,   1,   2,   1,   1,   2,   2,   0.5],
+    "regulatory_compliance":    [0.33,0.33,0.5, 0.5, 0.5, 0.33,0.33,0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1,   0.5, 0.5, 1,   1,   0.33],
+    "integration_capability":   [0.33,0.33,0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1,   1,   1,   1,   2,   1,   1,   2,   2,   0.5],
+    "sensor_compatibility":     [0.33,0.33,0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1,   1,   1,   1,   2,   1,   1,   2,   2,   0.5],
+    "data_storage":             [0.25,0.33,0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 0.5, 1,   0.5, 0.5, 1,   1,   0.33],
+    "launch_recovery_method":   [0.25,0.25,0.33,0.33,0.33,0.33,0.33,0.33,0.33,0.33,0.5, 0.5, 0.5, 0.5, 1,   0.5, 0.5, 1,   1,   0.33],
+    "redundancy_failsafe":      [0.5, 0.5, 1,   1,   1,   1,   1,   1,   1,   1,   2,   2,   2,   2,   3,   2,   2,   3,   3,   1]
+  }
+}
