@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>DSS — Drone Selection for EU Ports</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0a0f1a; --surface: #111827; --surface2: #1a2235; --border: #1e2d45;
+    --accent: #00d4ff; --accent2: #7c3aed; --green: #10b981; --red: #ef4444;
+    --amber: #f59e0b; --text: #e2e8f0; --muted: #64748b;
+    --mono: 'Space Mono', monospace; --sans: 'DM Sans', sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: var(--sans); min-height: 100vh; }
+  header { background: linear-gradient(135deg, #0a0f1a 0%, #0f1e35 100%); border-bottom: 1px solid var(--border); padding: 1.5rem 2rem; display: flex; align-items: center; gap: 1.5rem; }
+  .logo { width: 44px; height: 44px; background: linear-gradient(135deg, var(--accent), var(--accent2)); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; flex-shrink: 0; }
+  header h1 { font-family: var(--mono); font-size: 1rem; color: var(--accent); letter-spacing: 0.05em; }
+  header p { font-size: 0.8rem; color: var(--muted); margin-top: 2px; }
+  .badge { margin-left: auto; background: var(--surface2); border: 1px solid var(--border); padding: 4px 10px; border-radius: 20px; font-family: var(--mono); font-size: 0.7rem; color: var(--muted); }
+  .container { display: grid; grid-template-columns: 320px 1fr; gap: 0; min-height: calc(100vh - 73px); }
+  .sidebar { background: var(--surface); border-right: 1px solid var(--border); padding: 1.5rem; overflow-y: auto; }
+  .main { padding: 1.5rem; overflow-y: auto; }
+  .sidebar h3 { font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.12em; color: var(--muted); text-transform: uppercase; margin-bottom: 0.75rem; }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 1.5rem 0; }
+  .scenario-btn { width: 100%; text-align: left; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--text); font-family: var(--sans); font-size: 0.85rem; cursor: pointer; margin-bottom: 0.5rem; transition: all 0.2s; line-height: 1.4; }
+  .scenario-btn:hover { background: var(--surface2); border-color: var(--accent); }
+  .scenario-btn.active { background: rgba(0,212,255,0.08); border-color: var(--accent); color: var(--accent); }
+  .scenario-btn small { display: block; color: var(--muted); font-size: 0.73rem; margin-top: 3px; }
+  .saved-btn { width: 100%; text-align: left; padding: 0.6rem 0.85rem; border-radius: 8px; border: 1px solid rgba(124,58,237,0.3); background: rgba(124,58,237,0.05); color: var(--text); font-family: var(--sans); font-size: 0.82rem; cursor: pointer; margin-bottom: 0.4rem; transition: all 0.2s; display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+  .saved-btn:hover { background: rgba(124,58,237,0.12); border-color: var(--accent2); }
+  .saved-btn.active { background: rgba(124,58,237,0.18); border-color: var(--accent2); color: var(--accent2); }
+  .saved-btn-name { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .saved-btn-actions { display: flex; gap: 0.3rem; flex-shrink: 0; }
+  .saved-action { background: none; border: none; cursor: pointer; font-size: 0.75rem; padding: 2px 5px; border-radius: 4px; transition: background 0.15s; }
+  .saved-action:hover { background: var(--surface2); }
+  .no-saved { font-size: 0.76rem; color: var(--muted); font-style: italic; padding: 0.3rem 0; }
+  .run-btn { width: 100%; padding: 0.85rem; margin-top: 1rem; background: linear-gradient(135deg, var(--accent), #0099cc); color: #000; font-family: var(--mono); font-size: 0.8rem; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; letter-spacing: 0.08em; transition: opacity 0.2s; text-transform: uppercase; }
+  .run-btn:hover { opacity: 0.9; }
+  .run-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .custom-toggle-btn { width: 100%; text-align: left; padding: 0.75rem 1rem; border-radius: 8px; border: 1px dashed var(--accent2); background: rgba(124,58,237,0.05); color: var(--accent2); font-family: var(--sans); font-size: 0.85rem; cursor: pointer; margin-bottom: 0.75rem; transition: all 0.2s; }
+  .custom-toggle-btn:hover { background: rgba(124,58,237,0.12); }
+  .custom-toggle-btn.open { background: rgba(124,58,237,0.15); border-style: solid; }
+  .custom-form-wrap { display: none; }
+  .custom-form-wrap.open { display: block; }
+  .form-section-label { font-family: var(--mono); font-size: 0.62rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin: 1rem 0 0.5rem; display: flex; align-items: center; gap: 0.4rem; }
+  .form-section-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .form-group { margin-bottom: 0.6rem; }
+  .form-group label { display: block; font-size: 0.72rem; color: var(--muted); margin-bottom: 0.25rem; }
+  .form-group input, .form-group select { width: 100%; padding: 0.45rem 0.65rem; background: var(--bg); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-family: var(--sans); font-size: 0.82rem; outline: none; transition: border-color 0.2s; }
+  .form-group input:focus, .form-group select:focus { border-color: var(--accent2); }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }
+  .toggle-row span { font-size: 0.78rem; color: var(--text); }
+  .toggle { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider { position: absolute; inset: 0; background: var(--border); border-radius: 20px; cursor: pointer; transition: 0.2s; }
+  .toggle-slider:before { content: ''; position: absolute; width: 14px; height: 14px; left: 3px; top: 3px; background: var(--muted); border-radius: 50%; transition: 0.2s; }
+  .toggle input:checked + .toggle-slider { background: var(--accent2); }
+  .toggle input:checked + .toggle-slider:before { transform: translateX(16px); background: #fff; }
+  .form-btn-row { display: grid; grid-template-columns: 1fr auto; gap: 0.5rem; margin-top: 1rem; }
+  .run-custom-btn { padding: 0.85rem; background: linear-gradient(135deg, var(--accent2), #5b21b6); color: #fff; font-family: var(--mono); font-size: 0.8rem; font-weight: 700; border: none; border-radius: 8px; cursor: pointer; letter-spacing: 0.08em; transition: opacity 0.2s; text-transform: uppercase; }
+  .run-custom-btn:hover { opacity: 0.9; }
+  .save-scenario-btn { padding: 0.85rem 1rem; background: transparent; border: 1px solid var(--accent2); color: var(--accent2); font-family: var(--mono); font-size: 0.75rem; border-radius: 8px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+  .save-scenario-btn:hover { background: rgba(124,58,237,0.15); }
+  /* Tabs */
+  .tab-bar { display: flex; gap: 0.5rem; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border); padding-bottom: 0; }
+  .tab-btn { padding: 0.6rem 1.2rem; background: none; border: none; border-bottom: 2px solid transparent; color: var(--muted); font-family: var(--mono); font-size: 0.75rem; letter-spacing: 0.05em; cursor: pointer; transition: all 0.2s; margin-bottom: -1px; }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .tab-btn.ai-tab.active { color: var(--accent2); border-bottom-color: var(--accent2); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+  /* AI Overview */
+  .ai-overview { background: var(--surface); border: 1px solid rgba(124,58,237,0.25); border-radius: 10px; padding: 1.5rem; line-height: 1.8; font-size: 0.88rem; }
+  .ai-overview h2 { font-family: var(--mono); font-size: 0.85rem; color: var(--accent2); text-transform: uppercase; letter-spacing: 0.08em; margin: 1.25rem 0 0.5rem; }
+  .ai-overview h2:first-child { margin-top: 0; }
+  .ai-overview p { color: var(--text); margin-bottom: 0.75rem; }
+  .ai-overview strong { color: var(--accent); }
+  .ai-overview ul { padding-left: 1.25rem; margin-bottom: 0.75rem; }
+  .ai-overview li { color: var(--text); margin-bottom: 0.3rem; }
+  .ai-loading { display: flex; flex-direction: column; align-items: center; gap: 1rem; padding: 3rem; }
+  .ai-loading .spinner { border-top-color: var(--accent2); }
+  .ai-loading p { font-family: var(--mono); font-size: 0.78rem; color: var(--muted); }
+  .ai-error { background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.2); border-radius: 8px; padding: 1rem; color: var(--red); font-size: 0.83rem; }
+  /* Results */
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; }
+  .card-label { font-family: var(--mono); font-size: 0.65rem; letter-spacing: 0.1em; color: var(--muted); text-transform: uppercase; }
+  .card-value { font-family: var(--mono); font-size: 1.6rem; font-weight: 700; margin: 0.3rem 0; }
+  .card-value.green { color: var(--green); } .card-value.red { color: var(--red); } .card-value.blue { color: var(--accent); }
+  .card-sub { font-size: 0.78rem; color: var(--muted); }
+  .section { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; margin-bottom: 1.25rem; }
+  .section-title { font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--accent); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .rank-table { width: 100%; border-collapse: collapse; }
+  .rank-table th { font-family: var(--mono); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); text-align: left; padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); }
+  .rank-table td { padding: 0.65rem 0.75rem; font-size: 0.85rem; border-bottom: 1px solid rgba(30,45,69,0.5); }
+  .rank-table tr:hover td { background: var(--surface2); }
+  .rank-num { font-family: var(--mono); font-weight: 700; }
+  .rank-1 { color: #fbbf24; } .rank-2 { color: #94a3b8; } .rank-3 { color: #b45309; }
+  .cc-bar-wrap { display: flex; align-items: center; gap: 0.5rem; }
+  .cc-bar { height: 6px; border-radius: 3px; background: linear-gradient(90deg, var(--accent2), var(--accent)); }
+  .cc-val { font-family: var(--mono); font-size: 0.75rem; color: var(--accent); min-width: 48px; }
+  .stability-badge { padding: 2px 8px; border-radius: 12px; font-size: 0.7rem; font-family: var(--mono); }
+  .stability-HIGH { background: rgba(16,185,129,0.15); color: var(--green); border: 1px solid rgba(16,185,129,0.3); }
+  .stability-MEDIUM { background: rgba(245,158,11,0.15); color: var(--amber); border: 1px solid rgba(245,158,11,0.3); }
+  .stability-LOW { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+  .weight-row { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.55rem; }
+  .weight-label { width: 200px; flex-shrink: 0; color: var(--text); font-size: 0.78rem; }
+  .weight-bar-track { flex: 1; background: var(--surface2); border-radius: 3px; height: 8px; overflow: hidden; }
+  .weight-bar-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--accent2), var(--accent)); transition: width 0.6s ease; }
+  .weight-pct { font-family: var(--mono); font-size: 0.72rem; color: var(--muted); width: 45px; text-align: right; }
+  .elim-item { border: 1px solid rgba(239,68,68,0.2); background: rgba(239,68,68,0.04); border-radius: 8px; padding: 0.75rem 1rem; margin-bottom: 0.5rem; }
+  .elim-name { font-size: 0.85rem; font-weight: 600; color: var(--red); margin-bottom: 0.3rem; }
+  .elim-reason { font-size: 0.75rem; color: var(--muted); line-height: 1.5; }
+  .rec-box { background: linear-gradient(135deg, rgba(0,212,255,0.06), rgba(124,58,237,0.06)); border: 1px solid rgba(0,212,255,0.2); border-radius: 10px; padding: 1.25rem; margin-bottom: 1.25rem; }
+  .rec-title { font-family: var(--mono); font-size: 0.7rem; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; }
+  .rec-drone { font-size: 1.5rem; font-weight: 600; margin: 0.4rem 0; }
+  .rec-cc { font-family: var(--mono); font-size: 0.85rem; color: var(--accent); }
+  .rec-explain { font-size: 0.82rem; color: var(--muted); margin-top: 0.6rem; line-height: 1.6; }
+  .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; color: var(--muted); gap: 0.75rem; }
+  .empty-icon { font-size: 3rem; opacity: 0.3; }
+  .empty-text { font-family: var(--mono); font-size: 0.85rem; }
+  .loading { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; gap: 1rem; }
+  .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .cr-ok { color: var(--green); font-family: var(--mono); }
+  .cr-warn { color: var(--red); font-family: var(--mono); }
+  .toast { position: fixed; bottom: 1.5rem; right: 1.5rem; background: var(--surface2); border: 1px solid var(--accent2); color: var(--text); padding: 0.7rem 1.2rem; border-radius: 8px; font-family: var(--mono); font-size: 0.78rem; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+  @media (max-width: 900px) { .container { grid-template-columns: 1fr; } .sidebar { border-right: none; border-bottom: 1px solid var(--border); } .cards { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🛸</div>
+  <div>
+    <h1>DSS — DRONE SELECTION SYSTEM</h1>
+    <p>AHP + TOPSIS Multi-Criteria Decision Support · Small EU Ports</p>
+  </div>
+  <div class="badge">DV2573 · BTH</div>
+</header>
+
+<div class="container">
+  <aside class="sidebar">
+    <h3>Port Scenarios</h3>
+    <div id="scenario-list">Loading scenarios...</div>
+    <button class="run-btn" id="run-btn" onclick="runEvaluation()" disabled>▶ RUN EVALUATION</button>
+    <hr class="divider"/>
+    <h3>Saved Custom Scenarios</h3>
+    <div id="saved-list"></div>
+    <hr class="divider"/>
+    <h3>Custom Port Scenario</h3>
+    <button class="custom-toggle-btn" id="custom-toggle-btn" onclick="toggleCustomForm()">＋ Define Custom Scenario</button>
+    <div class="custom-form-wrap" id="custom-form-wrap">
+      <div class="form-section-label">Identity</div>
+      <div class="form-group"><label>Scenario Name</label><input type="text" id="c_name" placeholder="e.g. My Port Config" value="Custom Port Scenario"/></div>
+      <div class="form-section-label">Budget</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Max Initial Cost (€)</label><input type="number" id="c_init_cost" value="20000" min="0"/></div>
+        <div class="form-group"><label>Max Op. Cost (€/hr)</label><input type="number" id="c_op_cost" value="60" min="0"/></div>
+      </div>
+      <div class="form-section-label">Flight Requirements</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Min Flight Time (min)</label><input type="number" id="c_flight_time" value="30" min="0"/></div>
+        <div class="form-group"><label>Min Flight Range (km)</label><input type="number" id="c_flight_range" value="5" min="0" step="0.5"/></div>
+      </div>
+      <div class="form-section-label">Environment</div>
+      <div class="form-group"><label>Min Weather Resistance (IP)</label>
+        <select id="c_ip"><option value="IP43">IP43</option><option value="IP53">IP53</option><option value="IP55" selected>IP55</option><option value="IP67">IP67</option></select>
+      </div>
+      <div class="form-section-label">Regulatory</div>
+      <div class="form-group">
+        <label>Allowed Compliance Categories</label>
+        <select id="c_compliance" multiple size="3">
+          <option value="Open-A1">Open-A1</option><option value="Open-A2">Open-A2</option><option value="Open-A3">Open-A3</option><option value="Specific" selected>Specific</option><option value="Certified" selected>Certified</option>
+        </select>
+        <small style="color:var(--muted);font-size:0.7rem;margin-top:3px;display:block">Hold Ctrl/Cmd to select multiple</small>
+      </div>
+      <div class="form-section-label">Operations</div>
+      <div class="toggle-row"><span>Night Vision Required</span><label class="toggle"><input type="checkbox" id="c_night_vision"/><span class="toggle-slider"></span></label></div>
+      <div class="toggle-row"><span>Real-Time Transmission Required</span><label class="toggle"><input type="checkbox" id="c_rtt" checked/><span class="toggle-slider"></span></label></div>
+      <div class="form-section-label">Optional Constraints</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Min Camera Quality (MP)</label><input type="number" id="c_camera" placeholder="e.g. 20" min="0"/></div>
+        <div class="form-group"><label>Min Payload (kg)</label><input type="number" id="c_payload" placeholder="e.g. 0.5" min="0" step="0.1"/></div>
+        <div class="form-group"><label>Min Sensor Compat.</label><input type="number" id="c_sensor" placeholder="e.g. 5" min="0"/></div>
+        <div class="form-group"><label>Min Autonomy Level</label>
+          <select id="c_autonomy"><option value="">Any</option><option value="manual">Manual</option><option value="semi-autonomous">Semi-Autonomous</option><option value="fully-autonomous">Fully Autonomous</option></select>
+        </div>
+      </div>
+      <div class="form-section-label">Mission</div>
+      <div class="form-group"><label>Primary Mission</label>
+        <select id="c_mission">
+          <option value="perimeter_surveillance">Perimeter Surveillance</option>
+          <option value="security_surveillance">Security Surveillance</option>
+          <option value="infrastructure_inspection">Infrastructure Inspection</option>
+          <option value="environmental_monitoring">Environmental Monitoring</option>
+          <option value="emergency_response">Emergency Response</option>
+        </select>
+      </div>
+      <div class="form-btn-row">
+        <button class="run-custom-btn" onclick="runCustomEvaluation()">▶ RUN</button>
+        <button class="save-scenario-btn" onclick="saveCurrentScenario()">💾 SAVE</button>
+      </div>
+    </div>
+    <div style="margin-top:2rem;">
+      <h3>AHP Pairwise Matrix</h3>
+      <p style="font-size:0.78rem; color:var(--muted); line-height:1.5;">Using default 20×20 Saaty matrix from <code style="color:var(--accent)">ahp_pairwise_matrix.json</code>.</p>
+    </div>
+  </aside>
+
+  <main class="main" id="main">
+    <div class="empty-state">
+      <div class="empty-icon">⚓</div>
+      <div class="empty-text">Select a port scenario and run evaluation</div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+const STORAGE_KEY = 'dss_saved_scenarios';
+const DRONE_DATASET = {"drones":[{"id":"D01","name":"DJI Matrice 350 RTK","manufacturer":"DJI","type":"Multirotor","flight_time_min":55,"flight_range_km":20,"night_vision":"advanced","payload_capacity_kg":2.7,"camera_quality_mp":48,"autonomy_level":"fully-autonomous","weather_resistance_ip":"IP55","real_time_transmission":true,"obstacle_avoidance":"omnidirectional","gps_accuracy_m":0.1,"battery_swappable":true,"maintenance_score":2,"initial_cost_eur":9800,"operational_cost_eur_hr":35,"regulatory_compliance":"Specific","integration_capability":"high","sensor_compatibility":12,"data_storage_gb":128,"launch_recovery_method":"VTOL","redundancy_failsafe":"full-redundancy","user_training_days":5},{"id":"D02","name":"Parrot ANAFI USA","manufacturer":"Parrot","type":"Multirotor","flight_time_min":32,"flight_range_km":4,"night_vision":"advanced","payload_capacity_kg":0.0,"camera_quality_mp":32,"autonomy_level":"semi-autonomous","weather_resistance_ip":"IP53","real_time_transmission":true,"obstacle_avoidance":"basic","gps_accuracy_m":0.3,"battery_swappable":true,"maintenance_score":2,"initial_cost_eur":6500,"operational_cost_eur_hr":20,"regulatory_compliance":"Open-A2","integration_capability":"medium","sensor_compatibility":4,"data_storage_gb":32,"launch_recovery_method":"hand-launch","redundancy_failsafe":"basic","user_training_days":2},{"id":"D03","name":"Autel Robotics EVO II Pro","manufacturer":"Autel Robotics","type":"Multirotor","flight_time_min":42,"flight_range_km":9,"night_vision":"basic","payload_capacity_kg":0.5,"camera_quality_mp":50,"autonomy_level":"semi-autonomous","weather_resistance_ip":"IP43","real_time_transmission":true,"obstacle_avoidance":"basic","gps_accuracy_m":0.5,"battery_swappable":false,"maintenance_score":2,"initial_cost_eur":4200,"operational_cost_eur_hr":18,"regulatory_compliance":"Open-A2","integration_capability":"medium","sensor_compatibility":3,"data_storage_gb":64,"launch_recovery_method":"hand-launch","redundancy_failsafe":"basic","user_training_days":2},{"id":"D04","name":"Wingtra WingtraOne GEN II","manufacturer":"Wingtra","type":"Fixed-Wing VTOL","flight_time_min":59,"flight_range_km":35,"night_vision":"none","payload_capacity_kg":0.8,"camera_quality_mp":61,"autonomy_level":"fully-autonomous","weather_resistance_ip":"IP43","real_time_transmission":false,"obstacle_avoidance":"none","gps_accuracy_m":0.03,"battery_swappable":false,"maintenance_score":3,"initial_cost_eur":18000,"operational_cost_eur_hr":55,"regulatory_compliance":"Specific","integration_capability":"medium","sensor_compatibility":5,"data_storage_gb":256,"launch_recovery_method":"VTOL","redundancy_failsafe":"advanced","user_training_days":7},{"id":"D05","name":"Skydio 2+","manufacturer":"Skydio","type":"Multirotor","flight_time_min":27,"flight_range_km":6,"night_vision":"none","payload_capacity_kg":0.0,"camera_quality_mp":12,"autonomy_level":"fully-autonomous","weather_resistance_ip":"IP43","real_time_transmission":true,"obstacle_avoidance":"omnidirectional","gps_accuracy_m":0.5,"battery_swappable":false,"maintenance_score":1,"initial_cost_eur":2900,"operational_cost_eur_hr":12,"regulatory_compliance":"Open-A2","integration_capability":"low","sensor_compatibility":1,"data_storage_gb":16,"launch_recovery_method":"hand-launch","redundancy_failsafe":"basic","user_training_days":1},{"id":"D06","name":"Quantum Systems Trinity F90+","manufacturer":"Quantum Systems","type":"Fixed-Wing VTOL","flight_time_min":90,"flight_range_km":60,"night_vision":"none","payload_capacity_kg":1.0,"camera_quality_mp":42,"autonomy_level":"fully-autonomous","weather_resistance_ip":"IP43","real_time_transmission":true,"obstacle_avoidance":"none","gps_accuracy_m":0.05,"battery_swappable":false,"maintenance_score":3,"initial_cost_eur":22000,"operational_cost_eur_hr":70,"regulatory_compliance":"Specific","integration_capability":"high","sensor_compatibility":7,"data_storage_gb":512,"launch_recovery_method":"VTOL","redundancy_failsafe":"advanced","user_training_days":8},{"id":"D07","name":"senseFly eBee X","manufacturer":"senseFly (AgEagle)","type":"Fixed-Wing","flight_time_min":90,"flight_range_km":40,"night_vision":"none","payload_capacity_kg":0.4,"camera_quality_mp":24,"autonomy_level":"fully-autonomous","weather_resistance_ip":"IP43","real_time_transmission":false,"obstacle_avoidance":"none","gps_accuracy_m":0.03,"battery_swappable":false,"maintenance_score":3,"initial_cost_eur":15000,"operational_cost_eur_hr":48,"regulatory_compliance":"Specific","integration_capability":"medium","sensor_compatibility":6,"data_storage_gb":128,"launch_recovery_method":"hand-launch","redundancy_failsafe":"basic","user_training_days":5},{"id":"D08","name":"Freefly Alta X","manufacturer":"Freefly Systems","type":"Multirotor","flight_time_min":40,"flight_range_km":10,"night_vision":"none","payload_capacity_kg":15.9,"camera_quality_mp":0,"autonomy_level":"semi-autonomous","weather_resistance_ip":"IP43","real_time_transmission":false,"obstacle_avoidance":"none","gps_accuracy_m":0.5,"battery_swappable":true,"maintenance_score":4,"initial_cost_eur":12500,"operational_cost_eur_hr":80,"regulatory_compliance":"Specific","integration_capability":"medium","sensor_compatibility":8,"data_storage_gb":0,"launch_recovery_method":"VTOL","redundancy_failsafe":"advanced","user_training_days":10},{"id":"D09","name":"Percepto Sparrow","manufacturer":"Percepto","type":"Multirotor","flight_time_min":40,"flight_range_km":3,"night_vision":"advanced","payload_capacity_kg":1.0,"camera_quality_mp":30,"autonomy_level":"fully-autonomous","weather_resistance_ip":"IP55","real_time_transmission":true,"obstacle_avoidance":"omnidirectional","gps_accuracy_m":0.3,"battery_swappable":true,"maintenance_score":2,"initial_cost_eur":25000,"operational_cost_eur_hr":30,"regulatory_compliance":"Specific","integration_capability":"high","sensor_compatibility":9,"data_storage_gb":256,"launch_recovery_method":"automated-pad","redundancy_failsafe":"full-redundancy","user_training_days":3},{"id":"D10","name":"Inspired Flight IF1200A","manufacturer":"Inspired Flight","type":"Multirotor","flight_time_min":50,"flight_range_km":15,"night_vision":"basic","payload_capacity_kg":4.5,"camera_quality_mp":20,"autonomy_level":"semi-autonomous","weather_resistance_ip":"IP55","real_time_transmission":true,"obstacle_avoidance":"basic","gps_accuracy_m":0.2,"battery_swappable":true,"maintenance_score":3,"initial_cost_eur":14000,"operational_cost_eur_hr":50,"regulatory_compliance":"Specific","integration_capability":"high","sensor_compatibility":10,"data_storage_gb":128,"launch_recovery_method":"VTOL","redundancy_failsafe":"advanced","user_training_days":6},{"id":"D11","name":"DJI Mavic 3 Enterprise","manufacturer":"DJI","type":"Multirotor","flight_time_min":45,"flight_range_km":15,"night_vision":"basic","payload_capacity_kg":0.0,"camera_quality_mp":56,"autonomy_level":"semi-autonomous","weather_resistance_ip":"IP43","real_time_transmission":true,"obstacle_avoidance":"omnidirectional","gps_accuracy_m":0.1,"battery_swappable":false,"maintenance_score":1,"initial_cost_eur":3400,"operational_cost_eur_hr":15,"regulatory_compliance":"Open-A2","integration_capability":"medium","sensor_compatibility":5,"data_storage_gb":64,"launch_recovery_method":"hand-launch","redundancy_failsafe":"basic","user_training_days":2},{"id":"D12","name":"Zipline Platform 2","manufacturer":"Zipline","type":"Fixed-Wing","flight_time_min":120,"flight_range_km":80,"night_vision":"none","payload_capacity_kg":1.75,"camera_quality_mp":12,"autonomy_level":"fully-autonomous","weather_resistance_ip":"IP55","real_time_transmission":true,"obstacle_avoidance":"basic","gps_accuracy_m":0.3,"battery_swappable":false,"maintenance_score":4,"initial_cost_eur":40000,"operational_cost_eur_hr":90,"regulatory_compliance":"Certified","integration_capability":"high","sensor_compatibility":3,"data_storage_gb":64,"launch_recovery_method":"automated-pad","redundancy_failsafe":"full-redundancy","user_training_days":14},{"id":"D13","name":"Atlas Dynamics Atlas Pro","manufacturer":"Atlas Dynamics","type":"Multirotor","flight_time_min":36,"flight_range_km":5,"night_vision":"advanced","payload_capacity_kg":1.2,"camera_quality_mp":20,"autonomy_level":"semi-autonomous","weather_resistance_ip":"IP55","real_time_transmission":true,"obstacle_avoidance":"basic","gps_accuracy_m":0.4,"battery_swappable":true,"maintenance_score":2,"initial_cost_eur":8500,"operational_cost_eur_hr":28,"regulatory_compliance":"Specific","integration_capability":"medium","sensor_compatibility":6,"data_storage_gb":32,"launch_recovery_method":"VTOL","redundancy_failsafe":"advanced","user_training_days":4},{"id":"D14","name":"Delair UX11","manufacturer":"Delair","type":"Fixed-Wing","flight_time_min":59,"flight_range_km":25,"night_vision":"none","payload_capacity_kg":0.25,"camera_quality_mp":24,"autonomy_level":"fully-autonomous","weather_resistance_ip":"IP43","real_time_transmission":false,"obstacle_avoidance":"none","gps_accuracy_m":0.05,"battery_swappable":false,"maintenance_score":2,"initial_cost_eur":11000,"operational_cost_eur_hr":40,"regulatory_compliance":"Specific","integration_capability":"medium","sensor_compatibility":4,"data_storage_gb":64,"launch_recovery_method":"hand-launch","redundancy_failsafe":"basic","user_training_days":4},{"id":"D15","name":"Acecore Noa","manufacturer":"Acecore Technologies","type":"Multirotor","flight_time_min":55,"flight_range_km":10,"night_vision":"advanced","payload_capacity_kg":3.0,"camera_quality_mp":20,"autonomy_level":"semi-autonomous","weather_resistance_ip":"IP55","real_time_transmission":true,"obstacle_avoidance":"basic","gps_accuracy_m":0.2,"battery_swappable":true,"maintenance_score":3,"initial_cost_eur":17000,"operational_cost_eur_hr":60,"regulatory_compliance":"Specific","integration_capability":"high","sensor_compatibility":9,"data_storage_gb":128,"launch_recovery_method":"VTOL","redundancy_failsafe":"advanced","user_training_days":6},{"id":"D16","name":"Impossible Aerospace US-1","manufacturer":"Impossible Aerospace","type":"Multirotor","flight_time_min":78,"flight_range_km":8,"night_vision":"advanced","payload_capacity_kg":0.9,"camera_quality_mp":30,"autonomy_level":"semi-autonomous","weather_resistance_ip":"IP55","real_time_transmission":true,"obstacle_avoidance":"basic","gps_accuracy_m":0.3,"battery_swappable":false,"maintenance_score":3,"initial_cost_eur":13000,"operational_cost_eur_hr":42,"regulatory_compliance":"Specific","integration_capability":"medium","sensor_compatibility":5,"data_storage_gb":64,"launch_recovery_method":"VTOL","redundancy_failsafe":"advanced","user_training_days":5},{"id":"D17","name":"Yuneec H520E","manufacturer":"Yuneec","type":"Multirotor","flight_time_min":28,"flight_range_km":2,"night_vision":"basic","payload_capacity_kg":0.4,"camera_quality_mp":20,"autonomy_level":"semi-autonomous","weather_resistance_ip":"IP43","real_time_transmission":true,"obstacle_avoidance":"basic","gps_accuracy_m":0.5,"battery_swappable":true,"maintenance_score":2,"initial_cost_eur":2800,"operational_cost_eur_hr":14,"regulatory_compliance":"Open-A2","integration_capability":"low","sensor_compatibility":3,"data_storage_gb":16,"launch_recovery_method":"hand-launch","redundancy_failsafe":"basic","user_training_days":2},{"id":"D18","name":"Hoverfly Hovermast-100","manufacturer":"Hoverfly Technologies","type":"Tethered Multirotor","flight_time_min":480,"flight_range_km":0.1,"night_vision":"advanced","payload_capacity_kg":2.5,"camera_quality_mp":30,"autonomy_level":"semi-autonomous","weather_resistance_ip":"IP55","real_time_transmission":true,"obstacle_avoidance":"basic","gps_accuracy_m":0.3,"battery_swappable":false,"maintenance_score":3,"initial_cost_eur":20000,"operational_cost_eur_hr":10,"regulatory_compliance":"Open-A3","integration_capability":"high","sensor_compatibility":8,"data_storage_gb":256,"launch_recovery_method":"automated-pad","redundancy_failsafe":"advanced","user_training_days":5},{"id":"D19","name":"BRINC Lemur 2","manufacturer":"BRINC","type":"Multirotor","flight_time_min":22,"flight_range_km":3,"night_vision":"advanced","payload_capacity_kg":0.0,"camera_quality_mp":12,"autonomy_level":"semi-autonomous","weather_resistance_ip":"IP55","real_time_transmission":true,"obstacle_avoidance":"basic","gps_accuracy_m":0.5,"battery_swappable":false,"maintenance_score":2,"initial_cost_eur":9000,"operational_cost_eur_hr":22,"regulatory_compliance":"Specific","integration_capability":"low","sensor_compatibility":2,"data_storage_gb":32,"launch_recovery_method":"hand-launch","redundancy_failsafe":"basic","user_training_days":3},{"id":"D20","name":"Nordic Drones ND-800","manufacturer":"Nordic Drones","type":"Fixed-Wing VTOL","flight_time_min":75,"flight_range_km":50,"night_vision":"advanced","payload_capacity_kg":1.5,"camera_quality_mp":36,"autonomy_level":"fully-autonomous","weather_resistance_ip":"IP55","real_time_transmission":true,"obstacle_avoidance":"omnidirectional","gps_accuracy_m":0.1,"battery_swappable":true,"maintenance_score":2,"initial_cost_eur":19500,"operational_cost_eur_hr":65,"regulatory_compliance":"Specific","integration_capability":"high","sensor_compatibility":11,"data_storage_gb":512,"launch_recovery_method":"VTOL","redundancy_failsafe":"full-redundancy","user_training_days":7}]};
+let selectedScenario = null;
+let scenarios = [];
+window.lastResultContext = null; // stores data for AI tab
+
+// ── Toast ─────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ── Saved scenarios ───────────────────────────────────────────────────────
+function getSaved() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; } }
+function setSaved(list) { localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); }
+
+function renderSavedList() {
+  const saved = getSaved();
+  const el = document.getElementById('saved-list');
+  if (saved.length === 0) { el.innerHTML = '<div class="no-saved">No saved scenarios yet</div>'; return; }
+  el.innerHTML = saved.map((s, i) => `
+    <div class="saved-btn" id="saved-btn-${i}">
+      <span class="saved-btn-name" title="${s.name}">${s.name}</span>
+      <span class="saved-btn-actions">
+        <button class="saved-action" title="Load into form" onclick="loadSavedScenario(${i})">✏️</button>
+        <button class="saved-action" title="Run evaluation" onclick="runSavedScenario(${i})">▶</button>
+        <button class="saved-action" title="Delete" onclick="deleteSavedScenario(${i})">🗑</button>
+      </span>
+    </div>
+  `).join('');
+}
+
+function saveCurrentScenario() {
+  const name = document.getElementById('c_name').value.trim();
+  if (!name) { showToast('⚠ Enter a scenario name first'); return; }
+  const scenario = readFormValues();
+  const saved = getSaved();
+  const existing = saved.findIndex(s => s.name === name);
+  if (existing >= 0) { saved[existing] = scenario; showToast(`Updated "${name}"`); }
+  else { saved.push(scenario); showToast(`Saved "${name}"`); }
+  setSaved(saved);
+  renderSavedList();
+}
+
+function loadSavedScenario(index) {
+  const s = getSaved()[index]; if (!s) return;
+  const wrap = document.getElementById('custom-form-wrap');
+  const btn = document.getElementById('custom-toggle-btn');
+  wrap.classList.add('open'); btn.classList.add('open');
+  btn.textContent = '✕ Close Custom Scenario';
+  selectedScenario = null;
+  document.getElementById('run-btn').disabled = true;
+  renderScenarioList();
+  document.getElementById('c_name').value = s.name;
+  document.getElementById('c_init_cost').value = s.budget.max_initial_cost_eur;
+  document.getElementById('c_op_cost').value = s.budget.max_operational_cost_eur_hr;
+  document.getElementById('c_flight_time').value = s.hard_constraints.min_flight_time_min;
+  document.getElementById('c_flight_range').value = s.hard_constraints.min_flight_range_km;
+  document.getElementById('c_ip').value = s.hard_constraints.min_weather_resistance_ip;
+  document.getElementById('c_night_vision').checked = s.hard_constraints.night_vision_required;
+  document.getElementById('c_rtt').checked = s.hard_constraints.real_time_transmission_required;
+  document.getElementById('c_camera').value = s.hard_constraints.min_camera_quality_mp || '';
+  document.getElementById('c_payload').value = s.hard_constraints.min_payload_capacity_kg || '';
+  document.getElementById('c_sensor').value = s.hard_constraints.min_sensor_compatibility || '';
+  document.getElementById('c_autonomy').value = s.hard_constraints.min_autonomy_level || '';
+  document.getElementById('c_mission').value = s.mission.primary;
+  const sel = document.getElementById('c_compliance');
+  Array.from(sel.options).forEach(o => { o.selected = (s.hard_constraints.regulatory_compliance_allowed || []).includes(o.value); });
+  document.querySelectorAll('.saved-btn').forEach(b => b.classList.remove('active'));
+  const ab = document.getElementById(`saved-btn-${index}`); if (ab) ab.classList.add('active');
+  showToast(`Loaded "${s.name}"`);
+}
+
+async function runSavedScenario(index) {
+  const s = getSaved()[index]; if (!s) return;
+  document.querySelectorAll('.saved-btn').forEach(b => b.classList.remove('active'));
+  const ab = document.getElementById(`saved-btn-${index}`); if (ab) ab.classList.add('active');
+  await runCustomEvaluationWith(s);
+}
+
+function deleteSavedScenario(index) {
+  const saved = getSaved();
+  const name = saved[index]?.name;
+  saved.splice(index, 1); setSaved(saved); renderSavedList();
+  showToast(`Deleted "${name}"`);
+}
+
+// ── Form helpers ──────────────────────────────────────────────────────────
+function readFormValues() {
+  const name = document.getElementById('c_name').value.trim() || 'Custom Scenario';
+  const initCost = parseFloat(document.getElementById('c_init_cost').value) || 20000;
+  const opCost = parseFloat(document.getElementById('c_op_cost').value) || 60;
+  const flightTime = parseFloat(document.getElementById('c_flight_time').value) || 30;
+  const flightRange = parseFloat(document.getElementById('c_flight_range').value) || 5;
+  const ip = document.getElementById('c_ip').value;
+  const nightVision = document.getElementById('c_night_vision').checked;
+  const rtt = document.getElementById('c_rtt').checked;
+  const camera = document.getElementById('c_camera').value;
+  const payload = document.getElementById('c_payload').value;
+  const sensor = document.getElementById('c_sensor').value;
+  const autonomy = document.getElementById('c_autonomy').value;
+  const mission = document.getElementById('c_mission').value;
+  const complianceSel = document.getElementById('c_compliance');
+  const compliance = Array.from(complianceSel.selectedOptions).map(o => o.value);
+  const hard_constraints = { min_flight_time_min: flightTime, min_flight_range_km: flightRange, min_weather_resistance_ip: ip, regulatory_compliance_allowed: compliance, night_vision_required: nightVision, real_time_transmission_required: rtt };
+  if (camera) hard_constraints.min_camera_quality_mp = parseFloat(camera);
+  if (payload) hard_constraints.min_payload_capacity_kg = parseFloat(payload);
+  if (sensor) hard_constraints.min_sensor_compatibility = parseFloat(sensor);
+  if (autonomy) hard_constraints.min_autonomy_level = autonomy;
+  return { name, budget: { max_initial_cost_eur: initCost, max_operational_cost_eur_hr: opCost }, hard_constraints, mission: { primary: mission, secondary: [], flight_frequency: 'daily', avg_mission_duration_min: 40 }, environment: { location_type: 'custom', wind_exposure: 'moderate', salt_spray: true, operating_hours: nightVision ? '24_7' : 'daytime_only', area_km2: 2.0 } };
+}
+
+// ── Preset scenarios ──────────────────────────────────────────────────────
+async function fetchScenarios() {
+  try {
+    const r = await fetch(`${API}/api/scenarios`);
+    const d = await r.json();
+    scenarios = d.scenarios;
+    renderScenarioList();
+  } catch(e) {
+    document.getElementById('scenario-list').innerHTML = `<p style="color:var(--red);font-size:0.8rem;">⚠ Backend offline. Start the FastAPI server first:<br><code style="color:var(--accent)">uvicorn main:app --reload</code></p>`;
+  }
+}
+
+function renderScenarioList() {
+  document.getElementById('scenario-list').innerHTML = scenarios.map(s => `
+    <button class="scenario-btn ${selectedScenario===s.id?'active':''}" onclick="selectScenario('${s.id}')">
+      ${s.name}<small>${s.description.slice(0,70)}...</small>
+    </button>
+  `).join('');
+}
+
+function selectScenario(id) {
+  selectedScenario = id;
+  document.getElementById('run-btn').disabled = false;
+  document.getElementById('custom-form-wrap').classList.remove('open');
+  document.getElementById('custom-toggle-btn').classList.remove('open');
+  document.getElementById('custom-toggle-btn').textContent = '＋ Define Custom Scenario';
+  document.querySelectorAll('.saved-btn').forEach(b => b.classList.remove('active'));
+  renderScenarioList();
+}
+
+function toggleCustomForm() {
+  const wrap = document.getElementById('custom-form-wrap');
+  const btn = document.getElementById('custom-toggle-btn');
+  const isOpen = wrap.classList.toggle('open');
+  btn.classList.toggle('open', isOpen);
+  btn.textContent = isOpen ? '✕ Close Custom Scenario' : '＋ Define Custom Scenario';
+  if (isOpen) { selectedScenario = null; document.getElementById('run-btn').disabled = true; document.querySelectorAll('.saved-btn').forEach(b => b.classList.remove('active')); renderScenarioList(); }
+}
+
+// ── Evaluations ───────────────────────────────────────────────────────────
+async function runEvaluation() {
+  if (!selectedScenario) return;
+  document.getElementById('main').innerHTML = `<div class="loading"><div class="spinner"></div><p style="color:var(--muted);font-family:var(--mono);font-size:0.8rem;">Running AHP + TOPSIS pipeline...</p></div>`;
+  try {
+    const r = await fetch(`${API}/api/evaluate`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ scenario_id: selectedScenario, n_sensitivity_simulations: 300 }) });
+    if (!r.ok) { const err = await r.json(); throw new Error(err.detail); }
+    renderResults(await r.json());
+  } catch(e) {
+    document.getElementById('main').innerHTML = `<div class="empty-state"><div class="empty-icon">⚠</div><div class="empty-text" style="color:var(--red)">${e.message}</div></div>`;
+  }
+}
+
+async function runCustomEvaluation() {
+  const payload_body = readFormValues();
+  if (payload_body.hard_constraints.regulatory_compliance_allowed.length === 0) { alert('Select at least one regulatory compliance category.'); return; }
+  await runCustomEvaluationWith(payload_body);
+}
+
+async function runCustomEvaluationWith(payload_body) {
+  document.getElementById('main').innerHTML = `<div class="loading"><div class="spinner"></div><p style="color:var(--muted);font-family:var(--mono);font-size:0.8rem;">Running custom AHP + TOPSIS pipeline...</p></div>`;
+  try {
+    const r = await fetch(`${API}/api/evaluate/custom-scenario`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ scenario: payload_body }) });
+    if (!r.ok) { const err = await r.json(); throw new Error(err.detail); }
+    renderCustomResults(await r.json(), payload_body.name, payload_body);
+  } catch(e) {
+    document.getElementById('main').innerHTML = `<div class="empty-state"><div class="empty-icon">⚠</div><div class="empty-text" style="color:var(--red)">${e.message}</div></div>`;
+  }
+}
+
+// ── AI Overview ───────────────────────────────────────────────────────────
+function buildAIPrompt(ctx) {
+  const rows = ctx.ranking.map(r => `#${r.rank} ${r.name} — CC: ${r.closeness_coefficient.toFixed(4)}${r.stability ? ', stability: ' + r.stability : ''}`).join('\n');
+  return `You are an expert in drone selection and multi-criteria decision making.
+
+Scenario: ${ctx.scenarioName}
+
+TOPSIS Ranking:
+${rows}
+
+${ctx.eliminated && ctx.eliminated.length > 0 ? 'Eliminated drones: ' + ctx.eliminated.map(e => e.name).join(', ') : ''}
+
+In 3-4 short paragraphs explain: why the top drone won, why the bottom drones ranked low, and one key trade-off to consider. Be specific and concise.`;
+}
+
+
+function parseAIResponse(text) {
+  let html = text
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/## (.+)/g, '<h2>$1</h2>')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\n\n+/g, '</p><p>')
+    .replace(/\n/g, ' ');
+  return '<p>' + html + '</p>';
+}
+
+async function loadAIOverview() {
+  const ctx = window.lastResultContext;
+  const panel = document.getElementById('ai-panel');
+  if (!ctx) {
+    panel.innerHTML = '<div class="ai-error">No evaluation data found. Run an evaluation first.</div>';
+    return;
+  }
+  panel.innerHTML = '<div class="ai-loading"><div class="spinner" style="border-top-color:var(--accent2)"></div><p>Generating AI analysis...</p></div>';
+  try {
+    const prompt = buildAIPrompt(ctx);
+    const r = await fetch(`${API}/api/ai/overview`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ prompt })
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || 'API error');
+    const text = data.content[0].text;
+    panel.innerHTML = '<div class="ai-overview">' + parseAIResponse(text) + '</div>';
+  } catch(e) {
+    panel.innerHTML = '<div class="ai-error">⚠ AI Overview failed: ' + e.message + '</div>';
+  }
+}
+
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('tab-btn-' + tab).classList.add('active');
+  document.getElementById('tab-panel-' + tab).classList.add('active');
+  if (tab === 'ai') loadAIOverview();
+}
+
+// ── Render helpers ────────────────────────────────────────────────────────
+function tabBar() {
+  return `<div class="tab-bar">
+    <button class="tab-btn active" id="tab-btn-results" onclick="switchTab('results')">RESULTS</button>
+    <button class="tab-btn ai-tab" id="tab-btn-ai" onclick="switchTab('ai')">✦ AI OVERVIEW</button>
+  </div>
+  <div class="tab-panel active" id="tab-panel-results"></div>
+  <div class="tab-panel" id="tab-panel-ai"><div id="ai-panel"></div></div>`;
+}
+
+// ── Render: custom results ────────────────────────────────────────────────
+function renderCustomResults(d, scenarioName, scenarioPayload) {
+  window.lastResultContext = {
+    scenarioName,
+    scenarioDetails: scenarioPayload,
+    ahpWeights: Object.entries(d.ahp.weights || {}).sort((a,b) => b[1]-a[1]).slice(0,5),
+    ranking: d.ranking,
+    eliminated: d.eliminated_count > 0 ? [] : []
+  };
+
+  const main = document.getElementById('main');
+  main.innerHTML = tabBar();
+
+  const crColor = d.ahp.is_consistent ? 'green' : 'red';
+  const crLabel = d.ahp.is_consistent ? '✓ Consistent' : '✗ Inconsistent';
+  const rows = d.ranking.map(r => {
+    const rankClass = r.rank <= 3 ? `rank-${r.rank}` : '';
+    const ccPct = Math.min(r.closeness_coefficient * 100, 100);
+    return `<tr><td><span class="rank-num ${rankClass}">#${r.rank}</span></td><td>${r.name}</td><td style="color:var(--muted);font-size:0.78rem">${r.type}</td><td><div class="cc-bar-wrap"><div class="cc-bar" style="width:${ccPct*1.5}px;max-width:120px"></div><span class="cc-val">${r.closeness_coefficient.toFixed(4)}</span></div></td></tr>`;
+  }).join('');
+
+  document.getElementById('tab-panel-results').innerHTML = `
+    <div class="rec-box" style="border-color:rgba(124,58,237,0.3);background:linear-gradient(135deg,rgba(124,58,237,0.06),rgba(0,212,255,0.04))">
+      <div class="rec-title" style="color:var(--accent2)">Custom Scenario — Top Recommendation</div>
+      <div class="rec-drone">${d.ranking[0]?.name ?? 'No eligible drones'}</div>
+      ${d.ranking[0] ? `<div class="rec-cc" style="color:var(--accent2)">Closeness Coefficient: ${d.ranking[0].closeness_coefficient.toFixed(4)}</div>` : ''}
+      <div class="rec-explain">${scenarioName} · ${d.eligible_count} eligible of ${d.eligible_count + d.eliminated_count} drones</div>
+    </div>
+    <div class="cards">
+      <div class="card"><div class="card-label">Eligible Drones</div><div class="card-value blue">${d.eligible_count}</div><div class="card-sub">of ${d.eligible_count + d.eliminated_count} total</div></div>
+      <div class="card"><div class="card-label">AHP Consistency Ratio</div><div class="card-value ${crColor}">${d.ahp.consistency_ratio.toFixed(4)}</div><div class="card-sub ${crColor==='green'?'cr-ok':'cr-warn'}">${crLabel}</div></div>
+      <div class="card"><div class="card-label">Eliminated</div><div class="card-value red">${d.eliminated_count}</div><div class="card-sub">drones filtered out</div></div>
+    </div>
+    <div class="section">
+      <div class="section-title">TOPSIS Ranking — ${scenarioName}</div>
+      <table class="rank-table"><thead><tr><th>Rank</th><th>Drone</th><th>Type</th><th>CC</th></tr></thead><tbody>${rows}</tbody></table>
+    </div>`;
+}
+
+// ── Render: preset results ────────────────────────────────────────────────
+function renderResults(d) {
+  window.lastResultContext = {
+    scenarioName: d.scenario.name,
+    scenarioDetails: d.scenario,
+    ahpWeights: d.ahp.top5_criteria_by_weight,
+    ranking: d.ranking,
+    eliminated: d.filter_summary.eliminated_drones
+  };
+
+  const main = document.getElementById('main');
+  main.innerHTML = tabBar();
+
+  const crColor = d.ahp.is_consistent ? 'green' : 'red';
+  const crLabel = d.ahp.is_consistent ? '✓ Consistent' : '✗ Inconsistent';
+  const ahpBars = d.ahp.top5_criteria_by_weight.map(([crit, w]) => `
+    <div class="weight-row">
+      <span class="weight-label">${crit.replace(/_/g,' ')}</span>
+      <div class="weight-bar-track"><div class="weight-bar-fill" style="width:${Math.min(w*700,100)}%"></div></div>
+      <span class="weight-pct">${(w*100).toFixed(2)}%</span>
+    </div>`).join('');
+  const saMap = {};
+  d.sensitivity.results.forEach(r => saMap[r.id] = r);
+  const rows = d.ranking.map(r => {
+    const sa = saMap[r.id] || {};
+    const rankClass = r.rank <= 3 ? `rank-${r.rank}` : '';
+    const ccPct = Math.min(r.closeness_coefficient * 100, 100);
+    const stab = sa.stability || 'UNKNOWN';
+    return `<tr>
+      <td><span class="rank-num ${rankClass}">#${r.rank}</span></td>
+      <td>${r.name}</td>
+      <td style="color:var(--muted);font-size:0.78rem">${r.type}</td>
+      <td><div class="cc-bar-wrap"><div class="cc-bar" style="width:${ccPct*1.5}px;max-width:120px"></div><span class="cc-val">${r.closeness_coefficient.toFixed(4)}</span></div></td>
+      <td><span class="stability-badge stability-${stab}">${stab}</span></td>
+      <td style="font-family:var(--mono);font-size:0.75rem;color:var(--muted)">${sa.top3_frequency_pct ?? '—'}%</td>
+    </tr>`;
+  }).join('');
+  const elimHtml = d.filter_summary.eliminated_drones.map(e => `<div class="elim-item"><div class="elim-name">✗ ${e.name}</div><div class="elim-reason">${e.elimination_reasons.join('<br>')}</div></div>`).join('');
+
+  document.getElementById('tab-panel-results').innerHTML = `
+    <div class="rec-box">
+      <div class="rec-title">Top Recommendation</div>
+      <div class="rec-drone">${d.recommendation.top_drone}</div>
+      <div class="rec-cc">Closeness Coefficient: ${d.recommendation.closeness_coefficient.toFixed(4)} &nbsp;|&nbsp; Stability: ${d.recommendation.stability}</div>
+      <div class="rec-explain">${d.recommendation.explanation}</div>
+    </div>
+    <div class="cards">
+      <div class="card"><div class="card-label">Eligible Drones</div><div class="card-value blue">${d.filter_summary.eligible}</div><div class="card-sub">of ${d.filter_summary.total_drones} total</div></div>
+      <div class="card"><div class="card-label">AHP Consistency Ratio</div><div class="card-value ${crColor}">${d.ahp.consistency_ratio.toFixed(4)}</div><div class="card-sub ${crColor==='green'?'cr-ok':'cr-warn'}">${crLabel} (threshold: 0.10)</div></div>
+      <div class="card"><div class="card-label">Sensitivity Simulations</div><div class="card-value blue">${d.sensitivity.settings.n_simulations}</div><div class="card-sub">±${(d.sensitivity.settings.perturbation_pct*100).toFixed(0)}% weight perturbation</div></div>
+    </div>
+    <div class="section">
+      <div class="section-title">TOPSIS Ranking — ${d.scenario.name}</div>
+      <table class="rank-table"><thead><tr><th>Rank</th><th>Drone</th><th>Type</th><th>CC</th><th>Stability</th><th>Top-3 Freq.</th></tr></thead><tbody>${rows}</tbody></table>
+    </div>
+    <div class="section">
+      <div class="section-title">Top 5 AHP Criteria Weights</div>
+      ${ahpBars}
+      <p style="font-size:0.75rem;color:var(--muted);margin-top:0.75rem">Showing top 5 of 20 criteria. CR = ${d.ahp.consistency_ratio.toFixed(4)}${d.ahp.warning?`<br><span style="color:var(--red)">${d.ahp.warning}</span>`:''}</p>
+    </div>
+    ${d.filter_summary.eliminated > 0 ? `<div class="section"><div class="section-title">Eliminated by Knowledge Base (${d.filter_summary.eliminated} drones)</div>${elimHtml}</div>` : ''}`;
+}
+
+fetchScenarios();
+renderSavedList();
+</script>
+</body>
+</html>

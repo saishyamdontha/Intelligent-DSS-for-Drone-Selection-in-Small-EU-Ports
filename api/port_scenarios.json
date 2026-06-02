@@ -1,0 +1,178 @@
+{
+  "metadata": {
+    "description": "Preset port scenario profiles for the DSS. Each scenario defines operational context, budget constraints, and mission priorities that influence drone selection.",
+    "usage": "Feed selected scenario into the DSS alongside AHP weights and drone dataset to tailor recommendations to port context."
+  },
+  "scenarios": [
+    {
+      "id": "S01",
+      "name": "Coastal Surveillance: A Small Fishing Port",
+      "description": "A small fishing port with limited budget requiring basic perimeter surveillance and vessel monitoring during daytime operations.",
+      "environment": {
+        "location_type": "coastal",
+        "wind_exposure": "moderate",
+        "avg_wind_speed_kmh": 25,
+        "salt_spray": true,
+        "operating_hours": "daytime_only",
+        "area_km2": 0.5
+      },
+      "mission": {
+        "primary": "perimeter_surveillance",
+        "secondary": ["vessel_monitoring", "intruder_detection"],
+        "flight_frequency": "daily",
+        "avg_mission_duration_min": 30
+      },
+      "budget": {
+        "max_initial_cost_eur": 8000,
+        "max_operational_cost_eur_hr": 30,
+        "annual_budget_eur": 15000
+      },
+      "hard_constraints": {
+        "min_flight_time_min": 25,
+        "min_flight_range_km": 3,
+        "min_weather_resistance_ip": "IP43",
+        "regulatory_compliance_allowed": ["Open-A1", "Open-A2", "Open-A3"],
+        "night_vision_required": false,
+        "real_time_transmission_required": true
+      },
+      "priority_criteria": ["flight_time", "initial_cost", "operational_cost", "weather_resistance", "real_time_transmission"]
+    },
+    {
+      "id": "S02",
+      "name": "24/7 Security: A Medium Container Port",
+      "description": "A medium-sized container port requiring round-the-clock surveillance including night operations, with moderate budget and emphasis on autonomy and integration.",
+      "environment": {
+        "location_type": "industrial_port",
+        "wind_exposure": "high",
+        "avg_wind_speed_kmh": 35,
+        "salt_spray": true,
+        "operating_hours": "24_7",
+        "area_km2": 3.0
+      },
+      "mission": {
+        "primary": "security_surveillance",
+        "secondary": ["infrastructure_inspection", "environmental_monitoring", "incident_response"],
+        "flight_frequency": "continuous",
+        "avg_mission_duration_min": 45
+      },
+      "budget": {
+        "max_initial_cost_eur": 30000,
+        "max_operational_cost_eur_hr": 70,
+        "annual_budget_eur": 80000
+      },
+      "hard_constraints": {
+        "min_flight_time_min": 35,
+        "min_flight_range_km": 5,
+        "min_weather_resistance_ip": "IP55",
+        "regulatory_compliance_allowed": ["Open-A2", "Open-A3", "Specific"],
+        "night_vision_required": true,
+        "real_time_transmission_required": true
+      },
+      "priority_criteria": ["autonomy_level", "night_vision", "redundancy_failsafe", "weather_resistance", "integration_capability"]
+    },
+    {
+      "id": "S03",
+      "name": "Infrastructure Inspection: A Ferry Terminal",
+      "description": "A ferry terminal needing regular inspection of piers, structures, and vessel hulls. High camera quality and payload for sensor attachments are critical.",
+      "environment": {
+        "location_type": "ferry_terminal",
+        "wind_exposure": "moderate",
+        "avg_wind_speed_kmh": 20,
+        "salt_spray": true,
+        "operating_hours": "daytime_only",
+        "area_km2": 1.0
+      },
+      "mission": {
+        "primary": "infrastructure_inspection",
+        "secondary": ["hull_inspection", "structural_assessment"],
+        "flight_frequency": "weekly",
+        "avg_mission_duration_min": 60
+      },
+      "budget": {
+        "max_initial_cost_eur": 20000,
+        "max_operational_cost_eur_hr": 60,
+        "annual_budget_eur": 40000
+      },
+      "hard_constraints": {
+        "min_flight_time_min": 40,
+        "min_flight_range_km": 2,
+        "min_weather_resistance_ip": "IP43",
+        "regulatory_compliance_allowed": ["Open-A2", "Open-A3", "Specific"],
+        "night_vision_required": false,
+        "real_time_transmission_required": false,
+        "min_camera_quality_mp": 20,
+        "min_payload_capacity_kg": 0.5
+      },
+      "priority_criteria": ["camera_quality", "payload_capacity", "sensor_compatibility", "gps_accuracy", "obstacle_avoidance"]
+    },
+    {
+      "id": "S04",
+      "name": "Environmental Monitoring: An Eco-Sensitive Port",
+      "description": "A port adjacent to a protected marine area requiring environmental compliance monitoring, oil spill detection, and wildlife observation over wide areas.",
+      "environment": {
+        "location_type": "eco_sensitive_coastal",
+        "wind_exposure": "variable",
+        "avg_wind_speed_kmh": 22,
+        "salt_spray": true,
+        "operating_hours": "daytime_only",
+        "area_km2": 10.0
+      },
+      "mission": {
+        "primary": "environmental_monitoring",
+        "secondary": ["oil_spill_detection", "wildlife_observation", "water_quality_assessment"],
+        "flight_frequency": "bi_weekly",
+        "avg_mission_duration_min": 75
+      },
+      "budget": {
+        "max_initial_cost_eur": 25000,
+        "max_operational_cost_eur_hr": 80,
+        "annual_budget_eur": 50000
+      },
+      "hard_constraints": {
+        "min_flight_time_min": 50,
+        "min_flight_range_km": 20,
+        "min_weather_resistance_ip": "IP43",
+        "regulatory_compliance_allowed": ["Specific", "Certified"],
+        "night_vision_required": false,
+        "real_time_transmission_required": true,
+        "min_sensor_compatibility": 5
+      },
+      "priority_criteria": ["flight_range", "flight_time", "sensor_compatibility", "data_storage", "gps_accuracy"]
+    },
+    {
+      "id": "S05",
+      "name": "Emergency Response: A Multi-Purpose Port",
+      "description": "A large multi-purpose port requiring rapid deployment for emergency response, search and rescue support, and real-time coordination with port authority systems.",
+      "environment": {
+        "location_type": "multi_purpose_port",
+        "wind_exposure": "high",
+        "avg_wind_speed_kmh": 40,
+        "salt_spray": true,
+        "operating_hours": "24_7",
+        "area_km2": 5.0
+      },
+      "mission": {
+        "primary": "emergency_response",
+        "secondary": ["search_and_rescue_support", "incident_coordination", "maritime_safety"],
+        "flight_frequency": "on_demand",
+        "avg_mission_duration_min": 40
+      },
+      "budget": {
+        "max_initial_cost_eur": 35000,
+        "max_operational_cost_eur_hr": 100,
+        "annual_budget_eur": 100000
+      },
+      "hard_constraints": {
+        "min_flight_time_min": 30,
+        "min_flight_range_km": 10,
+        "min_weather_resistance_ip": "IP55",
+        "regulatory_compliance_allowed": ["Specific", "Certified"],
+        "night_vision_required": true,
+        "real_time_transmission_required": true,
+        "min_autonomy_level": "semi-autonomous",
+        "min_redundancy": "advanced"
+      },
+      "priority_criteria": ["redundancy_failsafe", "night_vision", "real_time_transmission", "weather_resistance", "autonomy_level"]
+    }
+  ]
+}
