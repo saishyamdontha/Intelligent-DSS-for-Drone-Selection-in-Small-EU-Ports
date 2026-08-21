@@ -366,15 +366,25 @@ def evaluate_custom(request: CustomScenarioRequest):
 
 @app.post("/api/ai/overview")
 def ai_overview(request: AIPromptRequest):
-    from groq import Groq
-    api_key = os.environ.get("GROQ_API_KEY", "your_groq_api_key_here")
-    if not api_key:
-        raise HTTPException(status_code=500, detail="GROQ_API_KEY not set.")
-    client = Groq(api_key=api_key)
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[{"role": "user", "content": request.prompt}],
-        max_tokens=1000,
+    import requests
+    from retrieval.retriever import retrieve
+
+    context_chunks = retrieve(request.prompt, k=4)
+    context_text = "\n\n".join(
+        [f"[p.{c['page']}] {c['content']}" for c in context_chunks]
     )
-    text = response.choices[0].message.content
-    return {"content": [{"type": "text", "text": text}]}
+
+    full_prompt = (
+        f"Context from EU drone regulation (EASA 2019/947, 2019/945):\n{context_text}\n\n"
+        f"Question: {request.prompt}\n\n"
+        f"Answer using only the context above. Cite the page number for any claim."
+    )
+
+    ollama_response = requests.post(
+        "http://localhost:11434/api/generate",
+        json={"model": "llama3.1:8b", "prompt": full_prompt, "stream": False},
+    )
+    if ollama_response.status_code != 200:
+        raise HTTPException(status_code=500, detail="Ollama request failed.")
+    text = ollama_response.json()["response"]
+    return {"content": [{"type": "text", "text": text}], "sources": context_chunks}
