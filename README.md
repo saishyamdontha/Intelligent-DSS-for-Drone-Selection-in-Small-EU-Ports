@@ -57,7 +57,15 @@ An Intelligent Decision Support System that helps EU port administrators select 
 cd api
 pip install -r requirements.txt
 export GROQ_API_KEY=your_groq_api_key_here
+export COHERE_API_KEY=your_cohere_api_key_here
+export LLM_PROVIDER=ollama
 uvicorn index:app --reload --port 8003
+```
+
+To build the RAG index locally (one-time):
+```bash
+export COHERE_API_KEY=your_cohere_api_key_here
+python3 retrieval/ingest.py
 ```
 
 ### Frontend
@@ -100,11 +108,13 @@ Open: http://localhost:8081
 ---
 
 ## AI Integration
-Uses **Groq API** with **Llama 3.3 70B** model for:
+Provider-agnostic explanation layer — defaults to a **local Ollama model** (`llama3.1:8b`) for development, falls back to **Groq API** (`openai/gpt-oss-120b`) for production, selected via the `LLM_PROVIDER` environment variable. Used for:
 - Explaining why top drone was selected
 - Describing strengths of each ranked drone
 - Explaining why drones were eliminated
-- Get free API key at: https://console.groq.com
+- Answering free-form regulatory questions, grounded in retrieved EASA regulation text (see RAG section below)
+
+Get a free Groq API key at: https://console.groq.com | Install Ollama locally at: https://ollama.com
 
 ---
 
@@ -128,6 +138,40 @@ Uses **Groq API** with **Llama 3.3 70B** model for:
 - 300 Monte Carlo simulations
 - ±20% weight perturbation
 - HIGH/MEDIUM/LOW stability classification
+
+---
+
+## Retrieval-Augmented Generation (RAG) Layer
+
+Extends the AI explanation layer with grounded, citable answers sourced directly from EU drone regulation text, rather than relying on the LLM's parametric knowledge alone.
+
+### Pipeline
+```
+EASA Easy Access Rules PDF (617 pages, Reg. 2019/947 + 2019/945)
+    ↓
+CHUNKING (LangChain RecursiveCharacterTextSplitter, ~500 chars, 50 overlap)
+    ↓
+EMBEDDING (Cohere embed-english-v3.0, batched for trial rate limits)
+    ↓
+FAISS VECTOR INDEX (3,600+ chunks, persisted to disk)
+    ↓
+QUERY-TIME RETRIEVAL (top-k semantic search, k=4)
+    ↓
+GROUNDED GENERATION (Ollama / Groq, cites source page numbers)
+````
+
+### Design notes
+- **Static pipeline, not an agent** — retrieval is a fixed, deterministic lookup (embed query → nearest-neighbor search), with no autonomous decision-making. Contrast with AgentDSS, a separate multi-agent project where agents make context-dependent decisions.
+- **Provider-agnostic embeddings and generation** — swapping Cohere for another embedding provider, or Ollama for Groq, requires no changes outside `retrieval/retriever.py` and the `LLM_PROVIDER` env var.
+- **Grounded, citable output** — every AI-generated answer references the source page number(s) it was drawn from, reducing hallucination risk versus an ungrounded LLM call.
+
+### Files
+| Path | Purpose |
+|------|---------|
+| `retrieval/ingest.py` | One-time: chunks the regulation PDF, embeds via Cohere, builds and saves the FAISS index |
+| `retrieval/retriever.py` | Runtime: loads the FAISS index (lazily, on first request) and serves top-k semantic search |
+| `retrieval/corpus/` | Source regulation PDF (gitignored — not committed) |
+| `retrieval/faiss_index/` | Persisted vector index (committed, since it's lightweight with Cohere embeddings) |
 
 ---
 
