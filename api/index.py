@@ -388,7 +388,7 @@ def ai_overview(request: AIPromptRequest):
             raise HTTPException(status_code=500, detail="GROQ_API_KEY not set.")
         client = Groq(api_key=api_key)
         response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="openai/gpt-oss-120b",
             messages=[{"role": "user", "content": full_prompt}],
             max_tokens=1000,
         )
