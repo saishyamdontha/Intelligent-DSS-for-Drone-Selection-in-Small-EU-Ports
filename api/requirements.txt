@@ -6,7 +6,6 @@ python-dotenv
 httpx
 langchain
 langchain-community
-langchain-huggingface
+langchain-cohere
 faiss-cpu
-sentence-transformers
 pypdf

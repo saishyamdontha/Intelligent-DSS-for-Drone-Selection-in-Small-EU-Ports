@@ -1,11 +1,11 @@
-from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_cohere import CohereEmbeddings
 from langchain_community.vectorstores import FAISS
 import os
 
 BASE = os.path.dirname(__file__)
 INDEX_PATH = os.path.join(BASE, "faiss_index")
 
-embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+embeddings = CohereEmbeddings(model="embed-english-v3.0")
 db = FAISS.load_local(INDEX_PATH, embeddings, allow_dangerous_deserialization=True)
 
 def retrieve(query: str, k: int = 4):
