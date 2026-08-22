@@ -386,13 +386,16 @@ def ai_overview(request: AIPromptRequest):
         api_key = os.environ.get("GROQ_API_KEY")
         if not api_key:
             raise HTTPException(status_code=500, detail="GROQ_API_KEY not set.")
-        client = Groq(api_key=api_key)
-        response = client.chat.completions.create(
-            model="openai/gpt-oss-120b",
-            messages=[{"role": "user", "content": full_prompt}],
-            max_tokens=1000,
-        )
-        text = response.choices[0].message.content
+        try:
+            client = Groq(api_key=api_key)
+            response = client.chat.completions.create(
+                model="openai/gpt-oss-120b",
+                messages=[{"role": "user", "content": full_prompt}],
+                max_tokens=1000,
+            )
+            text = response.choices[0].message.content
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"GROQ_DEBUG: {type(e).__name__}: {str(e)}")
     else:
         ollama_response = requests.post(
             "http://localhost:11434/api/generate",
