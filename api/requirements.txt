@@ -4,4 +4,9 @@ numpy
 groq
 python-dotenv
 httpx
-groq
+langchain
+langchain-community
+langchain-huggingface
+faiss-cpu
+sentence-transformers
+pypdf
