@@ -394,10 +394,8 @@ def ai_overview(request: AIPromptRequest):
                 max_tokens=1000,
             )
             text = response.choices[0].message.content
-        except Exception:
-            import logging
-            logging.getLogger(__name__).exception("Groq request failed")
-            raise HTTPException(status_code=502, detail="The AI service is temporarily unavailable. Please try again.")
+        except Exception as e:
+            raise HTTPException(status_code=500, detail=f"GROQ_DEBUG: {type(e).__name__}: {str(e)}")
     else:
         ollama_response = requests.post(
             "http://localhost:11434/api/generate",
