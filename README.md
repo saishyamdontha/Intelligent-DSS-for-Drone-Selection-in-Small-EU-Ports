@@ -176,13 +176,13 @@ GROUNDED GENERATION (Ollama / Groq, cites source page numbers)
 ---
 
 ## Team
-| Name | Student ID |
-|---------------------------------|---------------|
-| Sriya Chittaneni                | ***REMOVED*** |
-| Sri Sumedh Pisapati             | ***REMOVED*** |
-| Meghashyam Sai Dontha           | ***REMOVED*** |
-| Daiki Saito                     | ***REMOVED*** |
-| Venkata Naga Sai Yaswanth Deevi | ***REMOVED*** |
+| Name |
+| --- |
+| Sriya Chittaneni |
+| Sri Sumedh Pisapati |
+| Meghashyam Sai Dontha |
+| Daiki Saito |
+| Venkata Naga Sai Yaswanth Deevi |
 
 ---
 
