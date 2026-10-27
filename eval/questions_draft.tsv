@@ -1,0 +1,31 @@
+question	phrases
+How high am I allowed to fly in the open category?	120 m from the closest point
+What is the heaviest drone I can fly in the open category?	less than 25 kg
+How old do I have to be to fly a drone as a remote pilot?	16 years
+What is the weight limit for a class C0 drone?	250 g|c0
+Do I need to register as an operator if my small drone has a camera?	capture personal data
+Am I allowed to fly over crowds in subcategory A1?	assemblies of people|a1
+How far from uninvolved people must I stay in subcategory A2?	30 m|a2
+How close can I fly to people in A2 if the drone is in low speed mode?	low speed mode
+How far from houses and shops must I stay in subcategory A3?	150 m|residential
+Do I always need to see my drone with my own eyes in the open category?	vlos|open category
+Can I drop things from my drone in the open category?	drop any material
+Can I carry hazardous materials with a drone in the open category?	carry dangerous goods
+What do I need to pass to fly in subcategory A2?	certificate of remote pilot competency
+How many questions are in the online theory exam for the open category?	40 multiple-choice
+What certificate lets a drone company authorise its own operations?	light uas operator certificate|privileges
+What are the predefined operation types in the specific category called?	sts-01|sts-02
+How do I start operating under a standard scenario?	declaration|standard scenario
+Where must my operator number be shown?	registration number|display
+What system lets authorities identify a drone in flight?	direct remote identification|broadcast
+What feature warns the pilot about restricted airspace?	geo-awareness function|c1
+What is the maximum take-off mass for a class C1 drone?	900 g|c1
+What is the weight limit for a class C2 drone?	4 kg|c2
+How fast can a class C1 drone fly at most?	19 m/s
+When does a drone operation fall into the certified category?	certified|transport of people
+Can I fly a drone after drinking alcohol?	psychoactive substances
+What are the length and strength requirements for a drone tether?	tether|tensile
+Can my drone follow me automatically, and how far away can it be?	follow-me
+What noise information must be shown on the drone?	sound power level|label
+Who decides where drones are not allowed to fly in a country?	define uas geographical zones
+What method do operators use to assess risk for the specific category?	specific operations risk assessment
